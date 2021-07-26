@@ -32,3 +32,6 @@ class Player:
             elif dataset.iloc[i, 13] == index:
                 if dataset.iloc[i, 15] == self.id or dataset.iloc[i, 17] == self.name:
                     self.points = dataset.iloc[i, 22]
+
+    def import_player_performance(self, points):
+        self.points = points

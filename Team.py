@@ -8,13 +8,14 @@ class Team:
 
     def __init__(self, index, dataset):
         # season variables like team name and index
-        self.name = dataset.iloc[index, 0]
+        self.name = dataset.columns[index+1]
         self.index = index
         self.schedule = []
         # weekly variables, updated once after the game
-        self.score = dataset.iloc[index, :]
+        self.score = dataset.iloc[:, index+1]
         self.record = [0, 0, 0]
         self.adjusted_total_record = [0, 0, 0]
+        self.adjusted_opt_record = [0, 0, 0]
         self.roster = []
         self.weekly_standings = dataset
         # gametime variables, updated during the week for the game
@@ -40,7 +41,7 @@ class Team:
             if dataset.iloc[i, 2] == self.index:
                 tmp.append(Player(dataset, i))
         for j in self.roster:
-            cond = False  # variable assumes player isn't on lineup
+            cond = False  # variable assumes player isn't on roster
             for k in tmp:
                 if j.name == k.name:
                     cond = True
@@ -173,6 +174,21 @@ class Team:
         self.flex = lineup[6]
         self.dst = lineup[7]
         self.k = lineup[8]
+        for i in range(9, len(lineup)):
+            self.bench[i-9] = lineup[i]
+
+    def update_player_variables(self):
+        self.qb.lineup = 'qb'
+        self.rb[0].lineup = 'rb1'
+        self.rb[1].lineup = 'rb2'
+        self.wr[0].lineup = 'wr1'
+        self.wr[1].lineup = 'wr2'
+        self.te.lineup = 'te'
+        self.flex.lineup = 'flex'
+        self.dst.lineup = 'dst'
+        self.k.lineup = 'k'
+        for i in range(len(self.bench)):
+            self.bench[i].lineup = 'b'+str(i+1)
 
     def set_tpf(self):
         self.tpf = 0
@@ -183,6 +199,7 @@ class Team:
         self.tpf += self.flex.points
         self.tpf += self.dst.points
         self.tpf += self.k.points
+
 
     def get_roster(self):
         tmp = ''
@@ -199,6 +216,9 @@ class Team:
         tmp += 'Starting Flex: ' + self.flex.name + '\n'
         tmp += 'Starting D/ST: ' + self.dst.name + '\n'
         tmp += 'Starting K: ' + self.k.name + '\n'
+        tmp += 'Bench: '
+        for player in self.bench:
+            tmp += player.name + " "
         return tmp
 
     def drop(self, player):

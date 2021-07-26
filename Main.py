@@ -4,15 +4,16 @@ import openpyxl
 # import fantasy data sheet
 from Team import Team
 from Player import Player
+import database
 
-scoreboard = pd.read_excel(r'D:\Documents\Computer Science\Incubator Project\league_data.xlsx')
-op_scoreboard = pd.read_excel(r'D:\Documents\Computer Science\Incubator Project\optimized_league_data.xlsx')
+scoreboard = pd.read_excel(r'/Users/chris/Documents/CS/league_data.xlsx')
+op_scoreboard = pd.read_excel(r'/Users/chris/Documents/CS/optimized_league_data.xlsx')
 # change this file with each date
-box_score = pd.read_excel(r'D:\Documents\Computer Science\Incubator Project\box_score_sp1_mp1.xlsx')
-players = pd.read_excel(r'D:\Documents\Computer Science\Incubator Project\team_roster_sp1_mp1.xlsx')
-draft_recap = pd.read_excel(r'D:\Documents\Computer Science\Incubator Project\draft_recap2020.xlsx')
+box_scorexl = pd.read_excel(r'/Users/chris/Documents/CS/box_score_sp1_mp1.xlsx')
+players = pd.read_excel(r'/Users/chris/Documents/CS/team_roster_sp1_mp1.xlsx')
+draft_recap = pd.read_excel(r'/Users/chris/Documents/CS/draft_recap2020.xlsx')
 
-date = 2
+date = 1
 LEAGUE_SIZE = 12
 ROSTER_SIZE = 18
 
@@ -45,10 +46,10 @@ def draft_roster():
 
 
 def calculate_record(team):
-    for i in range(1, date + 1):
-        if league_list[find_opponent(team, i)].score[i] < league_list[team].score[i]:
+    for i in range(date):
+        if league_list[find_opponent(team, i+1)].score[i] < league_list[team].score[i]:
             league_list[team].record[0] += 1
-        elif league_list[find_opponent(team, i)].score[i] > league_list[team].score[i]:
+        elif league_list[find_opponent(team, i+1)].score[i] > league_list[team].score[i]:
             league_list[team].record[1] += 1
         else:
             league_list[team].record[2] += 1
@@ -60,7 +61,7 @@ def calculate_record(team):
 def adjusted_record(team):
     # initialize record array
     for week in range(1, date + 1):
-        my_team_score = league_list[team].score[week]
+        my_team_score = league_list[team].score[week-1]
         for i in range(LEAGUE_SIZE):
             their_team_score = league_list[i].score[week]
             if team != i:
@@ -72,6 +73,25 @@ def adjusted_record(team):
                     league_list[team].adjusted_total_record[2] += 1
 
     return league_list[team].adjusted_total_record
+
+
+# calculate adjusted optmized record (each team plays every opposing team each week, but team scores are optimized)
+def adjusted_opt_record(team):
+    # initialize record array
+    for week in range(1, date + 1):
+        # TODO change the accessor to be the actual SQLite database
+        my_team_score = league_list[team].tpf
+        for i in range(LEAGUE_SIZE):
+            their_team_score = league_list[i].tpf
+            if team != i:
+                if my_team_score > their_team_score:
+                    league_list[team].adjusted_opt_record[0] += 1
+                elif my_team_score < their_team_score:
+                    league_list[team].adjusted_opt_record[1] += 1
+                else:
+                    league_list[team].adjusted_opt_record[2] += 1
+
+    return league_list[team].adjusted_opt_record
 
 
 # calculate the direct head to head record between two teams
@@ -89,9 +109,14 @@ def adjusted_h2h_record(team1, team2):
 
 # convert array into readable record format
 def print_adjusted_record():
+    print("Adjusted Total Record")
     for index in range(LEAGUE_SIZE):
         print(str(league_list[index].name) + str(league_list[index].adjusted_total_record[0]) + '-' +
               str(league_list[index].adjusted_total_record[1]) + '-' + str(league_list[index].adjusted_total_record[2]))
+    print("Adjusted Optimized Record")
+    for index in range(LEAGUE_SIZE):
+        print(str(league_list[index].name) + str(league_list[index].adjusted_opt_record[0]) + '-' +
+              str(league_list[index].adjusted_opt_record[1]) + '-' + str(league_list[index].adjusted_opt_record[2]))
 
 
 # find the opponent of the nth team on a certain week
@@ -137,6 +162,28 @@ def med_points_scored(week):
     return (ordered[int(LEAGUE_SIZE / 2 - 1)] + ordered[int(LEAGUE_SIZE / 2)]) / 2
 
 
+# finds the team with the biggest difference in optimized and normal lineup
+def worst_coach(week):
+    diff = 0
+    dunce = None
+    for team in league_list:
+        if team.tpf - team.score[week - 1] > diff:
+            diff = team.tpf - team.score[week - 1]
+            dunce = team
+    return dunce
+
+
+def best_coach(week):
+    diff = 100000
+    dunce = None
+    for team in league_list:
+        if team.tpf - team.score[week - 1] < diff:
+            diff = team.tpf - team.score[week - 1]
+            dunce = team
+    return dunce
+
+# TODO add other fancy stats distribution stuff
+
 # calculate league standings
 def league_standings(week):
     for i in range(LEAGUE_SIZE):
@@ -157,6 +204,8 @@ def league_standings(week):
 # calculate certain attributes of teams
 # initialize my roster
 
+# box_score.show_all()
+
 draft_roster()
 
 # seasonal/weekly update loop
@@ -165,39 +214,44 @@ for i in range(LEAGUE_SIZE):
     calculate_record(i)
     league_list[i].update_roster(players)
     print(league_list[i].name + str(league_list[i].record))
-    # print(league_list[0].get_roster())
+    print(league_list[i].get_roster())
 
-print_adjusted_record()
+# database.show_all()
 
 # daily update loop
+opt_list = []
 for i in range(LEAGUE_SIZE):
-    league_list[i].set_lineup(box_score)
+    print(league_list[i].name)
+    league_list[i].set_lineup(box_scorexl)
+    league_list[i].update_player_variables()
     for j in range(len(league_list[i].roster)):
-        league_list[i].roster[j].set_player_performance(box_score, i)
+        league_list[i].roster[j].set_player_performance(box_scorexl, i)
         # print(league_list[i].roster[j].name + str(league_list[i].roster[j].points))
     league_list[i].set_tpf()
     league_list[i].optimize_lineup()
     league_list[i].set_tpf()
+    opt_list.append(league_list[i].tpf)
+    print(league_list[i].get_lineup())
+    league_list[i].update_player_variables()
+
+# database.add_opt(date, opt_list)
 
 # after optimized lineup
 for i in range(LEAGUE_SIZE):
-    adjusted_record(i)
+    adjusted_opt_record(i)
     calculate_record(i)
     op_scoreboard.iloc[i, date] = league_list[i].tpf
-    print(league_list[i].name + str(league_list[i].record))
+    # print(league_list[i].name + str(league_list[i].record))
 
     # print(league_list[0].get_roster())
 
 print_adjusted_record()
+database.show_all()
 # print(league_list[find_opponent(0, date)].name)
 # print(league_list[10].record)
 # print(avg_margin_of_victory(date))
+# print(adjusted_h2h_record(1, 3))
 
-
-# test writing own excel sheet
-writer = pd.ExcelWriter('test1.xlsx', engine='xlsxwriter')
-op_scoreboard.to_excel(writer, sheet_name='Sheet1')
-writer.save()
 
 '''
 for i in range(LEAGUE_SIZE):
@@ -207,7 +261,7 @@ for i in range(LEAGUE_SIZE):
 '''
 for week in range(1, date + 1):
     for team in range(12):
-        print(box_score.iloc[team, 0] + 'margin of victory of week ' + str(week) + ' is ' + str(margin_of_victory(team, week)))
+        print(box_scorexl.iloc[team, 0] + 'margin of victory of week ' + str(week) + ' is ' + str(margin_of_victory(team, week)))
     print('average margin of victory for week ' + str(week) + ' is ' + str(avg_margin_of_victory(week)))
 '''
 
