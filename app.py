@@ -53,8 +53,12 @@ def analyze():
     hLineup = ["Starting QB: " + homeTeam.qb.name, "Starting RB1: " + homeTeam.rb[0].name, "Starting RB2: " + homeTeam.rb[1].name, "Starting WR1: " + homeTeam.wr[0].name, "Starting WR2: " + homeTeam.wr[1].name, "Starting TE: " + homeTeam.te.name, "Starting Flex: " + homeTeam.flex.name, "Starting DST: " + homeTeam.dst.name, "Starting K: " + homeTeam.k.name]
     for tmp in homeTeam.bench:
         hLineup.append("Bench: " + tmp.name)
-    pointsFor = homeTeam.score[0]
-    margin = Main.avg_margin_of_victory(1)
+    aLineup = ["Starting QB: " + awayTeam.qb.name, "Starting RB1: " + awayTeam.rb[0].name, "Starting RB2: " + awayTeam.rb[1].name, "Starting WR1: " + awayTeam.wr[0].name, "Starting WR2: " + awayTeam.wr[1].name, "Starting TE: " + awayTeam.te.name, "Starting Flex: " + awayTeam.flex.name, "Starting DST: " + awayTeam.dst.name, "Starting K: " + awayTeam.k.name]
+    for tmp in awayTeam.bench:
+        aLineup.append("Bench: " + tmp.name)
+    pointsFor = awayTeam.score[0]
+    optPointsFor = awayTeam.tpf
+    margin = optPointsFor - pointsFor
     adjusted_h2h = Main.adjusted_h2h_record(1, 3)
     adjusted_record = Main.league_list[0].adjusted_total_record
     adjusted_opt_record = Main.league_list[0].adjusted_opt_record
@@ -65,8 +69,10 @@ def analyze():
     results = {
         'results': [
             #TODO fix this line so it can be JSON compatible
-            {'lineup': hLineup},
+            {'lineup': aLineup},
             {'pointsFor': pointsFor},
+            {'optPointsFor': optPointsFor},
+            {'marginOfOpt': margin},
             {'adjRecord': adjusted_record},
             {'adjOptRecord': adjusted_opt_record},
             {'adjh2hRecord': adjusted_h2h},

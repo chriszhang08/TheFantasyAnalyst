@@ -1,0 +1,43 @@
+from bs4 import BeautifulSoup as bs
+import pandas as pd
+pd.set_option('display.max_colwidth', 500)
+import time
+import requests
+import random
+
+# List of Authors and Quotes
+players = []
+pos = []
+team = []
+score = []
+
+# List of URLs
+urls = [f"https://fantasy.espn.com/football/leaders?leagueId=28094491/"]
+
+# List for Randomizing our request rate
+rate = [i / 10 for i in range(10)]
+
+# Iterating through the URLS
+for url in urls:
+
+    # Accessing the Webpage
+    page = requests.get(url)
+
+    # Getting the webpage's content in pure html
+    soup = bs(page.content)
+
+    # Adding the authors and quotes to their lists
+    players.extend([i.text for i in soup.find_all(class_='jsx-1811044066 player-column__athlete flex')])
+    pos.extend([i.text for i in soup.find_all(class_='playerinfo__playerpos ttu')])
+    team.extend([i.text for i in soup.find_all(class_='playerinfo__playerteam')])
+    score.extend([i.text for i in soup.find_all(class_='jsx-2810852873 table--cell total tar sortable')])
+
+    # Checking to see if we hit our required number of quotes then breaking the loop
+    if len(players) >= 200:
+        break
+
+    # Randomizing our request rate
+    time.sleep(random.choice(rate))
+
+print(players)
+print(score)

@@ -175,12 +175,12 @@ def worst_coach(week):
 
 def best_coach(week):
     diff = 100000
-    dunce = None
+    dub = None
     for team in league_list:
         if team.tpf - team.score[week - 1] < diff:
             diff = team.tpf - team.score[week - 1]
-            dunce = team
-    return dunce
+            dub = team
+    return dub
 
 # TODO add other fancy stats distribution stuff
 

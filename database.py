@@ -1,6 +1,5 @@
 import sqlite3
 import pandas as pd
-from sqlite3 import Error
 
 # scoreboard = pd.read_excel(r'/Users/chris/Documents/CS/league_data.xlsx')
 
@@ -37,8 +36,6 @@ c = conn.cursor()
 # c.execute("DELETE from scoreboard WHERE rowid = 14 or rowid = 15 or rowid = 16 or rowid = 17")
 
 # scoreboard.to_sql('scoreboard', conn, if_exists='append', index=False)
-
-# c.execute("INSERT INTO draft_recap VALUES ('Christian McCaffrey', 'RB', 'CAR', 2)")
 
 # c.execute("SELECT rowid, * FROM draft_recap")
 #

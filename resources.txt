@@ -1,6 +1,0 @@
-https://www.reddit.com/r/Python/comments/94uc7d/fantasy_football_espn_api_and_scraping_tutorial/
-https://fantasydatapass.com/
-https://youtu.be/x1SnG88d03g
-"Hindsight is 20/20, my fantasy team is 0/20"
-talk about cython
-use sql
